@@ -71,6 +71,10 @@ meandata_df <- datayear1_df %>%
   group_by(MONTH) %>%
   mutate(AVERAGE=mean(monthrain))
 
+p2 <- ggplot(data = meandata_df) +
+  geom_col(mapping = aes(x=MONTH,y=monthrain),fill="blue",show.legend = FALSE,alpha=0.5)
+wd <- resolution(ggplot_build(p2)$data[[1]]$x, FALSE) * 0.5  # 2365200
+
 p1 <- ggplot(meandata_df, aes(x=MONTH,y=monthrain,fill=YEAR)) +
   geom_col(show.legend = TRUE,alpha=0.4, width=wd,position=position_dodge()) +
   geom_point(aes(x=MONTH,y=AVERAGE,color="red"))+
