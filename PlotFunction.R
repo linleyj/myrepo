@@ -91,8 +91,6 @@ return(out)
 
 
 
-
-
 #Plot function
  
 PLOT<- function(startDay,endDay,numberYear)
@@ -129,20 +127,20 @@ df_join <- dataperiod_df %>%
 
 
 p1 <- ggplot(data = dataperiod_df) +
-  geom_col(mapping = aes(x=DDate,y=Amount),fill="blue",show.legend = FALSE,alpha=0.5)
+  geom_col(mapping = aes(x=as.Date(DDate),y=Amount),fill="blue",show.legend = FALSE,alpha=0.5)
 
 wd <- resolution(ggplot_build(p1)$data[[1]]$x, FALSE) * 0.5  # 2365200
 
 
-ggplot(data = dataperiod_df, aes(x=DDate,y=Amount)) +
+ ggplot(data = df_join, aes(x=as.Date(DDate),y=Amount)) +
   geom_col(fill="purple",show.legend = FALSE,alpha=0.4, width=wd) +
-  geom_point(aes(x=DDate,y=cumsum(Amount/10)),color="red")+
-  geom_path(aes(x=DDate, y=cumsum(Amount/10),group=1),color="red")+
-  geom_point(aes(data= df_join, x=DDate, y=cumAmount/10,group=1),color="blue")+
+  geom_point(aes(x=as.Date(DDate),y=cumsum(Amount/10)),color="red")+
+  geom_path(aes(x=as.Date(DDate), y=cumsum(Amount/10),group=1),color="red")+
+  geom_point(aes(x=as.Date(DDate), y=cumAmount/10,group=1),color="blue")+
   xlab("Date")+
   ylab("Daily rainfall (mm)")+
   theme_linley()+
-  scale_x_date(date_labels = "%b")+
+  scale_x_date(date_labels = "%Y-%b")+
   scale_y_continuous("Cumulative rainfall (mm)", sec.axis = sec_axis(~.*10, name = derive()))
 
 }
@@ -163,61 +161,3 @@ PLOT(startDay =  "2009-03-01 00", endDay =  "2013-08-01 00", numberYear =   10)
 
 
 
-#testing area 
-
-mutate(Newyear=floor(time_length(interval(start_D2, DDate ), unit = "year")))
-DATES(start_D = "2006-09-01 00", end_D = "2016-04-01 00", Number_year =  10, STATION = "3950", 3,1,1)
-
-data10years_df <-   DATES(start_D = "2006-09-01 00", end_D = "2016-04-01 00", Number_year =  10, STATION = "3950", 3,1,1)
-
-
-df1$test <- cut(df1$DDate,breaks=dim(df1)[1]/dim(df2)[1],labels = F)
-
-table(Data10years_df$test)
-
-
-dfstep<-df1 %>%
-  ungroup() %>%
-  mutate(DDate=as.Date(DDate)) %>% 
-  ungroup() %>%
-  arrange(DDate) %>% 
-  mutate(ordDate=format(DDate, "%j")) %>% 
-  mutate(MonthDay=as.factor(format(DDate, "%b-%d")))%>%
-  mutate(MonthDay=fct_inorder(MonthDay)) %>% 
-  group_by(ordDate) %>% 
-  summarise(MEANBYDAY=mean(Amount,na.rm=TRUE))
-    
-df_join <- df2 %>% 
-  mutate(ordDate=format(DDate, "%j")) %>% 
-  full_join(.,dfstep, by="ordDate") %>% 
-  arrange(DDate) %>% 
-  ungroup() %>% 
-  mutate(cumAmount=cumsum(MEANBYDAY))
-  
-
-start_D <- "2009-03-01 00"
-end_D <- "2013-08-01 00"
-lengthperiod<-difftime(end_D ,start_D , units = c("days"))
-dffinal<-
-  
-  
-  New10years <- Data10years_df %>% 
-  mutate(DDate=as.Date(DDate)) %>% 
-  mutate(MonthDay=format(DDate, "%b-%d")) %>% 
-  mutate(Year=format(DDate, "%Y")) %>% 
-  arrange(DDate) %>% 
-  mutate(MonthDay=fct_inorder(MonthDay)) %>% 
-  mutate(Newyear=floor(time_length(interval(start_D2, DDate ), unit = "year")))%>%
-  group_by(Newyear)%>%
-  mutate(CumAmount=cumsum(Amount)) %>%
-  ungroup() %>% 
-  group_by(MonthDay) %>% 
-  summarise(CumSum=mean(CumAmount, na.rm=T))
-
-dataperiod_df <- dataperiod_df %>%
-  mutate(DDate=as.Date(DDate)) %>% 
-  ungroup() %>%
-  mutate(MonthDay=format(DDate, "%b-%d")) %>% 
-  mutate(Year=format(DDate, "%Y")) %>% 
-  inner_join(.,New10years) %>% 
-  mutate(NewCumSum=CumSum)
