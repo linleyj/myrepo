@@ -87,11 +87,7 @@ return(out)
   
 
 
-
-
-
-
-#Plot function
+#Plot function "please change change the station number to that of your choice and make sure you did it twice"
  
 PLOT<- function(startDay,endDay,numberYear)
 {
@@ -99,6 +95,9 @@ PLOT<- function(startDay,endDay,numberYear)
   head(Data10years_df)
   start_D2 <- as.Date(startDay) - years(numberYear)
   print(start_D2)
+  
+  dataperiod_df <- as.tibble(DATES(start_D = startDay, end_D = endDay, Number_year =  numberYear, STATION = "3950", 3,1,1)$Newdata_df)
+  print(summary(dataperiod_df$DDate))
   
   dfstep<-Data10years_df %>%
     ungroup() %>%
@@ -110,13 +109,6 @@ PLOT<- function(startDay,endDay,numberYear)
     mutate(MonthDay=fct_inorder(MonthDay)) %>% 
     group_by(ordDate) %>% 
     summarise(MEANBYDAY=mean(Amount,na.rm=TRUE))
-  
-  Check<<-df_join
-  Check2<<-dfstep
-  
-
-dataperiod_df <- as.tibble(DATES(start_D = startDay, end_D = endDay, Number_year =  numberYear, STATION = "3950", 3,1,1)$Newdata_df)
-print(summary(dataperiod_df$DDate))
 
 df_join <- dataperiod_df %>% 
   mutate(ordDate=format(DDate, "%j")) %>% 
@@ -125,12 +117,13 @@ df_join <- dataperiod_df %>%
   ungroup() %>% 
   mutate(cumAmount=cumsum(MEANBYDAY))
 
-
 p1 <- ggplot(data = dataperiod_df) +
   geom_col(mapping = aes(x=as.Date(DDate),y=Amount),fill="blue",show.legend = FALSE,alpha=0.5)
 
 wd <- resolution(ggplot_build(p1)$data[[1]]$x, FALSE) * 0.5  # 2365200
 
+Check<<-df_join
+Check2<<-dfstep
 
  ggplot(data = df_join, aes(x=as.Date(DDate),y=Amount)) +
   geom_col(fill="purple",show.legend = FALSE,alpha=0.4, width=wd) +
@@ -145,7 +138,7 @@ wd <- resolution(ggplot_build(p1)$data[[1]]$x, FALSE) * 0.5  # 2365200
 
 }
 
-PLOT(startDay =  "2009-03-01 00", endDay =  "2013-08-01 00", numberYear =   10)
+PLOT(startDay =  "2012-03-01 00", endDay =  "2013-08-01 00", numberYear =   10)
 
 
 
