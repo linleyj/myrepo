@@ -1,3 +1,11 @@
+
+#This function allow you to get a barplot of monthly rainfall with a long term average
+#you just have to change the period your interested in and the station
+
+
+#first run these packages and the theme_linley function
+
+
 knitr::opts_chunk$set(echo = F, cache=T)
 library(pacman)
 p_load(devtools,httr,roxygen2,RCurl,dplyr)
@@ -26,62 +34,118 @@ theme_linley <- function(){
 }
 
 
+#Now run the DATES function
 
-
-barplot.fun <- function(start_date,end_date,data_types,stations){
+DATES<-function(start_D,end_D,Number_year,STATION,DATATYPE1,DATATYPE2,DATATYPE3)
+{
   
-  my_stations <- stations
-  my_data_types <- data_types 
-  my_start_date <- start_date
-  my_end_date <- end_date
-  YR <- format(as.Date(my_start_date), "%Y")
   
-MONTHDIFF <- 12*as.numeric(as.yearmon(as.Date(my_start_date)) - as.yearmon(paste(YR, "Jan", sep = "-"), "%Y-%b"))
-
-Dailyrain.datalist  <-  cf_query(user = me, 
-                             datatype = data_types, 
-                             station = stations,
-                             start_date = my_start_date,
-                             end_date = my_end_date)
-
-
-datayear1_df <- Dailyrain.datalist %>% 
-  map_df(`[`)
-head(datayear1_df)
-names(datayear1_df)
-
-names(datayear1_df)[names(datayear1_df)=="Date(local)"] <- "DDate"
-names(datayear1_df)[names(datayear1_df)=="Amount(mm)"] <- "Amount"
-
-datayear1_df <- datayear1_df %>%
-  ungroup() %>%
-  mutate(DDate=as.Date(DDate)) %>% 
-  mutate(MonthYear=format(DDate, "%Y-%b")) %>%
-  mutate(YEAR=format(DDate, "%Y")) %>%
-  mutate(MONTH=format(DDate, "%b"))
-
-meandata_df <- datayear1_df %>%
-  group_by(MonthYear,YEAR,MONTH) %>% 
-  summarise(monthrain=sum(Amount,na.rm=TRUE)) %>%
-  ungroup() %>% 
-  arrange(MonthYear) %>% 
-  mutate(MONTH=factor(MONTH, levels = month.abb)) %>% 
-  mutate(MONTH=fct_shift(MONTH,MONTHDIFF)) %>%
-  ungroup() %>%
-  group_by(MONTH) %>%
-  mutate(AVERAGE=mean(monthrain))
-
-p2 <- ggplot(data = meandata_df) +
-  geom_col(mapping = aes(x=MONTH,y=monthrain),fill="blue",show.legend = FALSE,alpha=0.5)
-wd <- resolution(ggplot_build(p2)$data[[1]]$x, FALSE) * 0.5  # 2365200
-
-p1 <- ggplot(meandata_df, aes(x=MONTH,y=monthrain,fill=YEAR)) +
-  geom_col(show.legend = TRUE,alpha=0.4, width=wd,position=position_dodge()) +
-  geom_point(aes(x=MONTH,y=AVERAGE,color="red"))+
-  xlab("Date")+
-  ylab("Monthly rainfall (mm)")+
-  theme_linley()
-print(p1)
+  start_D2 <- as.Date(start_D) - years(Number_year)
+  print(start_D2)
+  
+  New.datalist  <-  cf_query(user = me, 
+                             station =  cf_station(STATION), datatype = cf_datatype(DATATYPE1,DATATYPE2,DATATYPE3),
+                             start_date = start_D,
+                             end_date = end_D)
+  
+  LTNew.datalist  <-  cf_query(user = me, 
+                               station =  cf_station(STATION), datatype = cf_datatype(DATATYPE1,DATATYPE2,DATATYPE3),
+                               start_date = start_D2,
+                               end_date = end_D)
+  
+  Newdata_df <- New.datalist %>% 
+    map_df(`[`)
+  
+  LTNewdata_df <- LTNew.datalist %>% 
+    map_df(`[`)
+  
+  
+  names(LTNewdata_df)[names(LTNewdata_df)=="Date(local)"] <- "DDate"
+  names(LTNewdata_df)[names(LTNewdata_df)=="Amount(mm)"] <- "Amount"
+  names(Newdata_df)[names(Newdata_df)=="Date(local)"] <- "DDate"
+  names(Newdata_df)[names(Newdata_df)=="Amount(mm)"] <- "Amount"
+  
+  #Find NA's
+  
+  LT_sum <- LTNewdata_df %>%
+    mutate(Year=format(DDate, "%Y")) %>% 
+    mutate(Monthyear=format(DDate, "%Y-%b")) %>% 
+    mutate(MonthDay=format(DDate, "%b-%d")) %>% 
+    group_by(MonthDay) %>%
+    filter(is.na(Amount)) %>%
+    summarise(total =sum(Amount))
+  
+  out <- list(LTNewdata_df=LTNewdata_df, Newdata_df=Newdata_df)
+  print(str(out))
+  return(out)
 }
 
-barplot.fun(start_date="2010-10-01 00",end_date = "2013-09-29 00",data_types = cf_datatype(3, 1, 1),stations = cf_station(3950))
+#Then run the PLOT function but make sure you put your station of interest just below (STAION =), you have to do it twice !
+
+PLOT<- function(startDay,endDay,numberYear)
+{
+  Data10years_df <-   as.tibble(DATES(start_D = startDay, end_D = endDay, Number_year =  numberYear, STATION = "3950", 3,1,1)$LTNewdata_df)
+  head(Data10years_df)
+  start_D2 <- as.Date(startDay) - years(numberYear)
+  print(start_D2)
+  
+  dataperiod_df <- as.tibble(DATES(start_D = startDay, end_D = endDay, Number_year =  numberYear, STATION = "3950", 3,1,1)$Newdata_df)
+  print(summary(dataperiod_df$DDate))
+  
+  YR <- format(as.Date(startDay), "%Y")
+  MONTHDIFF <- 12*as.numeric(as.yearmon(as.Date(startDay)) - as.yearmon(paste(YR, "Jan", sep = "-"), "%Y-%b"))
+  
+  dataperiod_df <- dataperiod_df %>%
+    ungroup() %>%
+    mutate(DDate=as.Date(DDate)) %>% 
+    mutate(MonthYear=format(DDate, "%Y-%b")) %>%
+    mutate(YEAR=format(DDate, "%Y")) %>%
+    mutate(MONTH=format(DDate, "%b"))
+  
+  meandata_df <- dataperiod_df %>%
+    group_by(MonthYear,YEAR,MONTH) %>% 
+    summarise(monthrain=sum(Amount,na.rm=TRUE)) %>%
+    ungroup() %>% 
+    arrange(MonthYear) %>% 
+    mutate(MONTH=factor(MONTH, levels = month.abb)) %>% 
+    ungroup() %>%
+    group_by(MONTH,YEAR) %>%
+    mutate(AVERAGE=mean(monthrain))
+  
+  Data10years_df <- Data10years_df %>%
+    ungroup() %>%
+    mutate(DDate=as.Date(DDate)) %>% 
+    mutate(MonthYear=format(DDate, "%Y-%b")) %>%
+    mutate(YEAR=format(DDate, "%Y")) %>%
+    mutate(MONTH=format(DDate, "%b"))
+  
+  Data10yearsF_df <- Data10years_df %>%
+    group_by(MonthYear,YEAR,MONTH) %>% 
+    summarise(monthrain=sum(Amount,na.rm=TRUE)) %>%
+    ungroup() %>% 
+    arrange(MonthYear) %>% 
+    mutate(MONTH=factor(MONTH, levels = month.abb)) %>% 
+    ungroup() %>%
+    group_by(MONTH) %>%
+    mutate(AVERAGE=mean(monthrain)) %>% 
+    mutate(YEAR="2011")
+  
+  
+  p2 <- ggplot(data = meandata_df) +
+    geom_col(mapping = aes(x=MONTH,y=AVERAGE),fill="blue",show.legend = FALSE,alpha=0.5)
+  wd <- resolution(ggplot_build(p2)$data[[1]]$x, FALSE) * 0.5  # 2365200
+  
+  
+  p1 <- ggplot(data = Data10yearsF_df,aes(x=MONTH,y=AVERAGE,fill=YEAR)) +
+    geom_point(data = Data10yearsF_df,aes(x=MONTH,y=AVERAGE),position=position_dodge(width=0.2))+
+    geom_col(data=meandata_df,show.legend = TRUE,alpha=0.4, width=wd,position=position_dodge()) +
+    xlab("Date")+
+    ylab("Monthly rainfall mm")+
+    theme_linley()
+  print(p1)
+}
+
+#you can now set your period of interest and how many years you want to make a long term average
+
+PLOT(startDay =  "2009-03-01 00", endDay =  "2013-08-01 00", numberYear =   10)
+
