@@ -104,9 +104,8 @@ PLOT<- function(startDay,endDay,numberYear)
     ungroup() %>% 
     arrange(MonthYear) %>% 
     mutate(MONTH=factor(MONTH, levels = month.abb)) %>% 
-    mutate(MONTH=fct_shift(MONTH,MONTHDIFF)) %>%
     ungroup() %>%
-    group_by(MONTH) %>%
+    group_by(MONTH,YEAR) %>%
     mutate(AVERAGE=mean(monthradiation))
   
   Data10years_df <- Data10years_df %>%
@@ -122,18 +121,20 @@ PLOT<- function(startDay,endDay,numberYear)
     ungroup() %>% 
     arrange(MonthYear) %>% 
     mutate(MONTH=factor(MONTH, levels = month.abb)) %>% 
-    mutate(MONTH=fct_shift(MONTH,MONTHDIFF)) %>%
     ungroup() %>%
     group_by(MONTH) %>%
-    mutate(AVERAGE=mean(monthradiation))
+    mutate(AVERAGE=mean(monthradiation)) %>% 
+    mutate(YEAR="2011")
+ 
   
   p2 <- ggplot(data = meandata_df) +
-    geom_col(mapping = aes(x=MONTH,y=monthradiation),fill="blue",show.legend = FALSE,alpha=0.5)
+    geom_col(mapping = aes(x=MONTH,y=AVERAGE),fill="blue",show.legend = FALSE,alpha=0.5)
   wd <- resolution(ggplot_build(p2)$data[[1]]$x, FALSE) * 0.5  # 2365200
   
-  p1 <- ggplot(meandata_df, aes(x=MONTH,y=monthradiation,fill=YEAR)) +
-    geom_col(show.legend = TRUE,alpha=0.4, width=wd,position=position_dodge()) +
-    geom_point(data = Data10yearsF_df ,aes(x=MONTH,y=AVERAGE,color="red"))+
+  
+  p1 <- ggplot(data = Data10yearsF_df,aes(x=MONTH,y=AVERAGE,fill=YEAR)) +
+    geom_point(data = Data10yearsF_df,aes(x=MONTH,y=AVERAGE),position=position_dodge(width=0.2))+
+    geom_col(data=meandata_df,show.legend = TRUE,alpha=0.4, width=wd,position=position_dodge()) +
     xlab("Date")+
     ylab("Monthly radiation (MJ/m2)")+
     theme_linley()
