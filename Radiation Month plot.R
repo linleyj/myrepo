@@ -145,6 +145,6 @@ PLOT<- function(startDay,endDay,numberYear)
 
 #you can now set your period of interest and how many years you want to make a long term average
 
-PLOT(startDay =  "2009-03-01 00", endDay =  "2013-08-01 00", numberYear =   10)
+PLOT(startDay =  "2005-03-01 00", endDay =  "2008-08-01 00", numberYear =   10)
 
 
