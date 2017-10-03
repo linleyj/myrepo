@@ -13,6 +13,7 @@ library(ggplot2)
 library(tidyverse)
 library(forcats)
 library(lubridate)
+library(tcltk)
 
 #proxy setup
 
@@ -21,7 +22,32 @@ cf_curl_opts(.opts = list(proxy = "https://proxy.pfr.co.nz:8080", ssl.verifypeer
 
 #username and password for Cliflo database
 
-me = cf_user("linleyj","PFRCLIFLO")
+getLoginDetails <- function(){ 
+  require(tcltk) 
+  tt <- tktoplevel() 
+  tkwm.title(tt, "Get login details") 
+  Name <- tclVar("Login ID") 
+  Password <- tclVar("Password") 
+  entry.Name <- tkentry(tt,width="20", textvariable=Name) 
+  entry.Password <- tkentry(tt, width="20", show="*",textvariable=Password) 
+  tkgrid(tklabel(tt, text="Please enter your login details.")) 
+  tkgrid(entry.Name) 
+  tkgrid(entry.Password) 
+  
+  OnOK <- function() 
+  {  
+    tkdestroy(tt)  
+  } 
+  OK.but <-tkbutton(tt,text=" OK ", command=OnOK) 
+  tkbind(entry.Password, "<Return>", OnOK) 
+  tkgrid(OK.but) 
+  tkfocus(tt) 
+  tkwait.window(tt) 
+  
+  invisible(c(loginID=tclvalue(Name), password=tclvalue(Password))) 
+} 
+credentials <- getLoginDetails() 
+me<-cf_user(as.vector(credentials[1]),as.vector(credentials[2]))
 
 #plot theme
 
@@ -68,17 +94,16 @@ DATES<-function(start_D,end_D,Number_year,STATION,DATATYPE1,DATATYPE2,DATATYPE3)
   #Find NA's
   
   LT_sum <- LTNewtest_df %>%
-    mutate(Year=format(DDate, "%Y")) %>% 
-    mutate(Monthyear=format(DDate, "%Y-%b")) %>% 
-    mutate(MonthDay=format(DDate, "%b-%d")) %>% 
-    group_by(MonthDay) %>%
     filter(is.na(Tair)) %>%
     summarise(total =sum(Tair))
   
+  print(paste0("You have ", LT_sum$total, " NA's"))
+  
   out <- list(LTNewtest_df=LTNewtest_df, Newtest_df=Newtest_df)
-  print(str(out))
-  return(out)
+
 }
+
+DATES(start_D="2005-03-01 00",end_D="2008-08-01 00",Number_year=10,STATION="3925",4,1,1)
 
 #Then run the PLOT function but make sure you put your station of interest just below (STAION =), you have to do it twice !
 
