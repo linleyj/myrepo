@@ -108,14 +108,13 @@ DATES(start_D="2005-03-01 00",end_D="2008-08-01 00",Number_year=10,STATION="3925
 #Then run the PLOT function but make sure you put your station of interest just below (STAION =), you have to do it twice !
 
 
-PLOT<- function(startDay,endDay,numberYear)
+PLOT<- function(startDay,endDay,numberYear,station)
 {
-  Data10years_df <-   as.tibble(DATES(start_D = startDay, end_D = endDay, Number_year =  numberYear, STATION = "3925", 4,1,1)$LTNewtest_df)
+  Data10years_df <-   as.tibble(DATES(start_D = startDay, end_D = endDay, Number_year =  numberYear, STATION = station, 4,1,1)$LTNewtest_df)
   head(Data10years_df)
   start_D2 <- as.Date(startDay) - years(numberYear)
-  print(start_D2)
   
-  dataperiod_df <- as.tibble(DATES(start_D = startDay, end_D = endDay, Number_year =  numberYear, STATION = "3925", 4,1,1)$Newtest_df)
+  dataperiod_df <- as.tibble(DATES(start_D = startDay, end_D = endDay, Number_year =  numberYear, STATION = station, 4,1,1)$Newtest_df)
   print(summary(dataperiod_df$DDate))
 
   Newtestday_df <- dataperiod_df %>%
@@ -178,5 +177,5 @@ PLOT<- function(startDay,endDay,numberYear)
     print(p1)
 }
 
-PLOT(startDay =  "2005-03-01 00", endDay =  "2008-08-01 00", numberYear =   10)
+PLOT(startDay =  "2005-03-01 00", endDay =  "2008-08-01 00", numberYear =   10, station = "3925")
   
