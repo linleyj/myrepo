@@ -105,7 +105,7 @@ DATES<-function(start_D,end_D,Number_year,STATION,DATATYPE1,DATATYPE2,DATATYPE3)
 
 DATES(start_D="2005-03-01 00",end_D="2008-08-01 00",Number_year=10,STATION="3925",4,1,1)
 
-#Then run the PLOT function but make sure you put your station of interest just below (STAION =), you have to do it twice !
+#Then run the PLOT function
 
 
 PLOT<- function(startDay,endDay,numberYear,station)
