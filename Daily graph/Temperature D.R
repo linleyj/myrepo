@@ -21,7 +21,34 @@ cf_curl_opts(.opts = list(proxy = "https://proxy.pfr.co.nz:8080", ssl.verifypeer
 
 #username and password for Cliflo database
 
-me = cf_user("linleyj","PFRCLIFLO")
+
+getLoginDetails <- function(){ 
+  require(tcltk) 
+  tt <- tktoplevel() 
+  tkwm.title(tt, "Get login details") 
+  Name <- tclVar("Login ID") 
+  Password <- tclVar("Password") 
+  entry.Name <- tkentry(tt,width="20", textvariable=Name) 
+  entry.Password <- tkentry(tt, width="20", show="*",textvariable=Password) 
+  tkgrid(tklabel(tt, text="Please enter your login details.")) 
+  tkgrid(entry.Name) 
+  tkgrid(entry.Password) 
+  
+  OnOK <- function() 
+  {  
+    tkdestroy(tt)  
+  } 
+  OK.but <-tkbutton(tt,text=" OK ", command=OnOK) 
+  tkbind(entry.Password, "<Return>", OnOK) 
+  tkgrid(OK.but) 
+  tkfocus(tt) 
+  tkwait.window(tt) 
+  
+  invisible(c(loginID=tclvalue(Name), password=tclvalue(Password))) 
+} 
+credentials <- getLoginDetails() 
+me<-cf_user(as.vector(credentials[1]),as.vector(credentials[2]))
+
 
 #plot theme
 
@@ -39,7 +66,7 @@ theme_linley <- function(){
 
 #Now run the DATES function
 
-DATES<-function(start_D,end_D,Number_year,STATION,DATATYPE1,DATATYPE2,DATATYPE3)
+DDATEST<-function(start_D,end_D,Number_year,STATION,DATATYPE1,DATATYPE2,DATATYPE3)
 {
   
   
@@ -71,29 +98,25 @@ DATES<-function(start_D,end_D,Number_year,STATION,DATATYPE1,DATATYPE2,DATATYPE3)
   #Find NA's
   
   LT_sum <- LTNewtest_df %>%
-    mutate(Year=format(DDate, "%Y")) %>% 
-    mutate(Monthyear=format(DDate, "%Y-%b")) %>% 
-    mutate(MonthDay=format(DDate, "%b-%d")) %>% 
-    group_by(MonthDay) %>%
     filter(is.na(Tair)) %>%
     summarise(total =sum(Tair))
   
+  print(paste0("You have ", LT_sum$total, " NA's"))
+  
   out <- list(LTNewtest_df=LTNewtest_df, Newtest_df=Newtest_df)
-  print(str(out))
-  return(out)
 }
 
 
 #Then run the PLOT function but make sure you put your station of interest just below (STAION =), you have to do it twice !
 
-PLOT<- function(startDay,endDay,numberYear)
+DPLOTT<- function(startDay,endDay,numberYear,station)
 {
-  Data10years_df <-   as.tibble(DATES(start_D = startDay, end_D = endDay, Number_year =  numberYear, STATION = "3925", 4,1,1)$LTNewtest_df)
+  Data10years_df <-   as.tibble(DDATEST(start_D = startDay, end_D = endDay, Number_year =  numberYear, STATION = station, 4,1,1)$LTNewtest_df)
   head(Data10years_df)
   start_D2 <- as.Date(startDay) - years(numberYear)
   print(start_D2)
   
-  dataperiod_df <- as.tibble(DATES(start_D = startDay, end_D = endDay, Number_year =  numberYear, STATION = "3925", 4,1,1)$Newtest_df)
+  dataperiod_df <- as.tibble(DDATEST(start_D = startDay, end_D = endDay, Number_year =  numberYear, STATION = station, 4,1,1)$Newtest_df)
   print(summary(dataperiod_df$DDate))
 
   Newtestday_df <- dataperiod_df %>%
@@ -132,7 +155,7 @@ PLOT<- function(startDay,endDay,numberYear)
     mutate(MonthDay=as.Date(MonthDay,format="%Y-%b-%d"))
   
   
-  ggplot(data = df_join)+
+ P2<<- ggplot(data = df_join)+
     geom_point(aes(x=MonthDay,y=cumAmount.ST/100),color="red")+
     geom_point(aes(x=MonthDay, y=cumAmount.LT/100,group=1),color="blue")+
     geom_path(aes(x=MonthDay, y=cumAmount.ST/100,group=1),color="red")+
@@ -146,7 +169,6 @@ PLOT<- function(startDay,endDay,numberYear)
 
 #you can now set your period of interest and how many years you want to make a long term average
 
-PLOT(startDay =  "2005-03-01 00", endDay =  "2008-08-01 00", numberYear =   10)
-
+DPLOTT(startDay =  "2005-03-01 00", endDay =  "2008-08-01 00", numberYear =   10)
 
   

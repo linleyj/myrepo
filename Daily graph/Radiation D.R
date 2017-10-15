@@ -15,9 +15,6 @@ library(lubridate)
 options(RCurlOptions = list(proxy = 'http://proxy.pfr.co.nz:8080')) 
 cf_curl_opts(.opts = list(proxy = "https://proxy.pfr.co.nz:8080", ssl.verifypeer = FALSE))
 
-#username and password for Cliflo database
-
-me = cf_user("linleyj","PFRCLIFLO")
 
 #plot theme
 
@@ -34,7 +31,7 @@ theme_linley <- function(){
 #first function is doing the queries
 
 
-DATES<-function(start_D,end_D,Number_year,STATION,DATATYPE1,DATATYPE2,DATATYPE3)
+DDATESR<-function(start_D,end_D,Number_year,STATION,DATATYPE1,DATATYPE2,DATATYPE3)
 {
   
   #set up the new start date for the long term query
@@ -72,25 +69,18 @@ DATES<-function(start_D,end_D,Number_year,STATION,DATATYPE1,DATATYPE2,DATATYPE3)
   #Find NA's
   
   LT_sum <- LTNewdata_df %>%
-    mutate(Year=format(DDate, "%Y")) %>% 
-    mutate(Monthyear=format(DDate, "%Y-%b")) %>% 
-    mutate(MonthDay=format(DDate, "%b-%d")) %>% 
-    group_by(MonthDay) %>%
     filter(is.na(Amount)) %>%
     summarise(total =sum(Amount))
   
+  print(paste0("You have ", LT_sum$total, " NA's"))
+  
   out <- list(LTNewdata_df=LTNewdata_df, Newdata_df=Newdata_df)
-  print(str(out))
-  return(out)
 }
 
-DATES(start_D= "2012-03-01 00", end_D="2013-08-01 00" ,Number_year= 10,STATION = "3925",DATATYPE1 =  5,DATATYPE2 =  2, DATATYPE3 =  1)
 
-
-
-PLOT<- function(startDay,endDay,numberYear)
+DPLOTR<- function(startDay,endDay,numberYear,station)
 {
-  Data10years_df <-   as.tibble(DATES(start_D = startDay, end_D = endDay, Number_year =  numberYear, STATION = "3925", 5,2,1)$LTNewdata_df)
+  Data10years_df <-   as.tibble(DDATESR(start_D = startDay, end_D = endDay, Number_year =  numberYear, STATION =station, 5,2,1)$LTNewdata_df)
   head(Data10years_df)
   start_D2 <- as.Date(startDay) - years(numberYear)
   print(start_D2)
@@ -107,7 +97,7 @@ PLOT<- function(startDay,endDay,numberYear)
     summarise(MEANBYDAY=mean(Amount,na.rm=TRUE))
   
   
-  dataperiod_df <- as.tibble(DATES(start_D = startDay, end_D = endDay, Number_year =  numberYear, STATION = "3925", 5,2,1)$Newdata_df)
+  dataperiod_df <- as.tibble(DDATESR(start_D = startDay, end_D = endDay, Number_year =  numberYear, STATION = station, 5,2,1)$Newdata_df)
   print(summary(dataperiod_df$DDate))
   
   df_join <- dataperiod_df %>% 
@@ -121,7 +111,7 @@ PLOT<- function(startDay,endDay,numberYear)
   Check2<<-dfstep
   
   
-  ggplot(data = df_join, aes(x=as.Date(DDate),y=Amount)) +
+  P3<<-ggplot(data = df_join, aes(x=as.Date(DDate),y=Amount)) +
     geom_area(fill="purple",show.legend = FALSE,alpha=0.4) +
     geom_point(aes(x=as.Date(DDate),y=cumsum(Amount/100)),color="red")+
     geom_path(aes(x=as.Date(DDate), y=cumsum(Amount/100),group=1),color="red")+
@@ -134,7 +124,7 @@ PLOT<- function(startDay,endDay,numberYear)
   
 }
 
-PLOT(startDay =  "2009-03-01 00", endDay =  "2013-08-01 00", numberYear =   10)
+
 
 
 
