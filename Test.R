@@ -82,16 +82,16 @@ DDATEST<-function(start_D,end_D,Number_year,STATION,DATATYPE1,DATATYPE2,DATATYPE
   location.df<-location.df%>%
     arrange(distance)
   
-  i<-1
+  
   
   
   New.test  <-  cf_query(user = me, 
-                         station =  cf_find_station(STATION), datatype = cf_datatype(DATATYPE1,DATATYPE2,DATATYPE3),
+                         station =  cf_station(as.character(location.df[i,3][1])), datatype = cf_datatype(DATATYPE1,DATATYPE2,DATATYPE3),
                          start_date = start_D,
                          end_date = end_D)
   
   LTNew.test  <-  cf_query(user = me, 
-                           station =  cf_find_station(STATION), datatype = cf_datatype(DATATYPE1,DATATYPE2,DATATYPE3),
+                           station = cf_station(as.character(location.df[i,3][1])), datatype = cf_datatype(DATATYPE1,DATATYPE2,DATATYPE3),
                            start_date = start_D2,
                            end_date = end_D)
   
@@ -209,9 +209,13 @@ location.df<-location.df%>%
 
 
 
-i<-1
-while {
-  LT
-}
-location.df[i,1]
-as.
+i<-0
+LT_sum$total<-0
+
+while (LT_sum$total<5) {
+  i<-i+1
+  }
+
+#Then querry
+
+as.character(location.df[i,3][1])
