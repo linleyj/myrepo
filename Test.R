@@ -172,12 +172,8 @@ DDATEST<-function(start_D,end_D,Number_year,STATION,DATATYPE1,DATATYPE2,DATATYPE
     } 
   }
 
-  LTNewtest_df2 <- LTNewtest_df
-  Newtest_df2 <- Newtest_df
-  names(LTNewtest_df2)[names(LTNewtest_df2)=="Date(local)"] <- "DDate"
-  names(LTNewtest_df2)[names(LTNewtest_df2)=="Tair(C)"] <- "Tair"
-  names(Newtest_df2)[names(Newtest_df2)=="Date(local)"] <- "DDate"
-  names(Newtest_df2)[names(Newtest_df2)=="Tair(C)"] <- "Tair"
+ 
+  return(list(LTNewtest_df=LTNewtest_df, Newtest_df=Newtest_df))
 }
 
 
@@ -185,12 +181,12 @@ DDATEST<-function(start_D,end_D,Number_year,STATION,DATATYPE1,DATATYPE2,DATATYPE
 
 DPLOTT<- function(startDay,endDay,numberYear,station)
 {
-  Data10years_df <<-   as.tibble(DDATEST(start_D = startDay, end_D = endDay, Number_year =  numberYear, STATION = station, 4,1,1)$LTNewtest_df2)
+  Data10years_df <-   as.tibble(DDATEST(start_D = startDay, end_D = endDay, Number_year =  numberYear, STATION = station, 4,1,1)$LTNewtest_df)
   head(Data10years_df)
   start_D2 <- as.Date(startDay) - years(numberYear)
   print(start_D2)
   
-  dataperiod_df <<- as.tibble(DDATEST(start_D = startDay, end_D = endDay, Number_year =  numberYear, STATION = station, 4,1,1)$Newtest_df2)
+  dataperiod_df <- as.tibble(DDATEST(start_D = startDay, end_D = endDay, Number_year =  numberYear, STATION = station, 4,1,1)$Newtest_df)
   print(summary(dataperiod_df$DDate))
   
   Newtestday_df <- dataperiod_df %>%
