@@ -1,4 +1,5 @@
 
+
 #This function allow you to get a barplot of monthly radiation with a long term average
 #you just have to change the period your interested in and the station
 #first run these packages and the theme_linley function
@@ -73,41 +74,110 @@ DDATEST<-function(start_D,end_D,Number_year,STATION,DATATYPE1,DATATYPE2,DATATYPE
   start_D2 <- as.Date(start_D) - years(Number_year)
   print(start_D2)
   
-  New.test  <-  cf_query(user = me, 
-                             station =  cf_station(STATION), datatype = cf_datatype(DATATYPE1,DATATYPE2,DATATYPE3),
-                             start_date = start_D,
-                             end_date = end_D)
-  
-  LTNew.test  <-  cf_query(user = me, 
-                               station =  cf_station(STATION), datatype = cf_datatype(DATATYPE1,DATATYPE2,DATATYPE3),
-                               start_date = start_D2,
-                               end_date = end_D)
-  
-  Newtest_df <- New.test %>% 
+  choice<-cf_find_station(STATION)
+  LAT<-choice$lat[1]
+  LON<-choice$lon[1]
+  location.st<-cf_find_station(lat = LAT, long = LON, rad = 10,search = "latlong")
+  location.df <- location.st %>% 
     map_df(`[`)
+  location.df<-location.df%>%
+    arrange(distance)
   
-  LTNewtest_df <- LTNew.test %>% 
-    map_df(`[`)
+  
+  for(i in 1:dim(location.df)[1]){
+    print(location.df[i,"name"])
+    try(New.test  <-  cf_query(user = me, 
+                               station =  cf_station(as.character(location.df[i,3][1])), datatype = cf_datatype(DATATYPE1,DATATYPE2,DATATYPE3),
+                               start_date = start_D,
+                               end_date = end_D))
+    
+    
+    if(exists("New.test")==F) {
+      print("Cliflo error - trying next station")
+      next
+    }
+    
+    else{
+      print("Found a station with data")
+      
+      Newtest_df <- New.test %>% 
+        map_df(`[`)
+      
+      names(Newtest_df)[names(Newtest_df)=="Tair(C)"] <- "Tair"
+      names(Newtest_df)[names(Newtest_df)=="Date(local)"] <- "DDate"
+      
+      df_nas <- Newtest_df %>% 
+        filter(is.na(Tair)) %>%
+        summarise(total =sum(Tair))
+      print(df_nas)
+      if(df_nas$total>5&&i<dim(location.df)[1]){
+        print("Too many nas trying next station")
+        next
+      }
+      
+      if(df_nas$total<5&&i<dim(location.df)){
+        print("Usable station found with success !")
+        break
+      }
+      
+      else{
+        print("No locations found")
+        break
+      }
+    } 
+  }
   
   
-  names(LTNewtest_df)[names(LTNewtest_df)=="Date(local)"] <- "DDate"
-  names(LTNewtest_df)[names(LTNewtest_df)=="Tair(C)"] <- "Tair"
-  names(Newtest_df)[names(Newtest_df)=="Date(local)"] <- "DDate"
-  names(Newtest_df)[names(Newtest_df)=="Tair(C)"] <- "Tair"
   
-  #Find NA's
   
-  LT_sum <- LTNewtest_df %>%
-    filter(is.na(Tair)) %>%
-    summarise(total =sum(Tair))
+  for(i in 1:dim(location.df)[1]){
+    print(location.df[i,"name"])
+    try(LTNew.test  <-  cf_query(user = me, 
+                                 station =  cf_station(as.character(location.df[i,3][1])), datatype = cf_datatype(DATATYPE1,DATATYPE2,DATATYPE3),
+                                 start_date = start_D2,
+                                 end_date = end_D))
+    
+    
+    if(exists("LTNew.test")==F) {
+      print("Cliflo error - trying next station")
+      next
+    }
+    
+    else{
+      print("Found a station with data")
+      
+      LTNewtest_df <- LTNew.test %>% 
+        map_df(`[`)
+      
+      names(LTNewtest_df)[names(LTNewtest_df)=="Tair(C)"] <- "Tair"
+      names(LTNewtest_df)[names(LTNewtest_df)=="Date(local)"] <- "DDate"
+      
+      LTdf_nas <- LTNewtest_df %>% 
+        filter(is.na(Tair)) %>%
+        summarise(total =sum(Tair))
+      print(LTdf_nas)
+      if(LTdf_nas$total>5&&i<dim(location.df)[1]){
+        print("Too many nas trying next station")
+        next
+      }
+      
+      if(LTdf_nas$total<5&&i<dim(location.df)){
+        print("Usable station found with success !")
+        break
+      }
+      
+      else{
+        print("No locations found")
+        break
+      }
+    } 
+  }
   
-  print(paste0("You have ", LT_sum$total, " NA's"))
-  
-  out <- list(LTNewtest_df=LTNewtest_df, Newtest_df=Newtest_df)
+  return(list(LTNewtest_df=LTNewtest_df, Newtest_df=Newtest_df))
 }
 
 
-#Then run the PLOT function but make sure you put your station of interest just below (STAION =), you have to do it twice !
+
 
 DPLOTT<- function(startDay,endDay,numberYear,station)
 {
@@ -118,7 +188,7 @@ DPLOTT<- function(startDay,endDay,numberYear,station)
   
   dataperiod_df <- as.tibble(DDATEST(start_D = startDay, end_D = endDay, Number_year =  numberYear, STATION = station, 4,1,1)$Newtest_df)
   print(summary(dataperiod_df$DDate))
-
+  
   Newtestday_df <- dataperiod_df %>%
     mutate(MonthYear=format(DDate, "%Y-%b")) %>%
     mutate(YEAR=format(DDate, "%Y")) %>%
@@ -155,7 +225,7 @@ DPLOTT<- function(startDay,endDay,numberYear,station)
     mutate(MonthDay=as.Date(MonthDay,format="%Y-%b-%d"))
   
   
- P2<<- ggplot(data = df_join)+
+  P2<<- ggplot(data = df_join)+
     geom_point(aes(x=MonthDay,y=cumAmount.ST/100),color="red")+
     geom_point(aes(x=MonthDay, y=cumAmount.LT/100,group=1),color="blue")+
     geom_path(aes(x=MonthDay, y=cumAmount.ST/100,group=1),color="red")+
@@ -167,8 +237,3 @@ DPLOTT<- function(startDay,endDay,numberYear,station)
     geom_area(aes(x=MonthDay, y=MEANBYDAY.x),fill="purple",show.legend = FALSE,alpha=0.4)
 }
 
-#you can now set your period of interest and how many years you want to make a long term average
-
-DPLOTT(startDay =  "2005-03-01 00", endDay =  "2008-08-01 00", numberYear =   10)
-
-  

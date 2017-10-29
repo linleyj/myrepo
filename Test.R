@@ -55,11 +55,11 @@ me<-cf_user(as.vector(credentials[1]),as.vector(credentials[2]))
 theme_linley <- function(){
   theme_grey(base_size = 15, base_family = "") %+replace% 
     theme(panel.background = element_rect(fill = "white", 
-                                          colour = NA), panel.border = element_rect(fill = NA, 
-                                                                                    colour = "grey20"), panel.grid.major = element_line(colour = "grey92"), 
-          panel.grid.minor = element_line(colour = "grey92", 
-                                          size = 0.25), strip.background = element_rect(fill = "grey85", 
-                                                                                        colour = "black"), legend.key = element_rect(fill = "white",                                                                                                                                    colour = NA), complete = TRUE)
+    colour = NA), panel.border = element_rect(fill = NA, 
+    colour = "grey20"), panel.grid.major = element_line(colour = "grey92"), 
+    panel.grid.minor = element_line(colour = "grey92", 
+    size = 0.25), strip.background = element_rect(fill = "grey85", 
+    colour = "black"), legend.key = element_rect(fill = "white",                                                                                                                                    colour = NA), complete = TRUE)
 }
 
 
@@ -74,8 +74,8 @@ DDATEST<-function(start_D,end_D,Number_year,STATION,DATATYPE1,DATATYPE2,DATATYPE
   print(start_D2)
   
   choice<-cf_find_station(STATION)
-  LAT<-test$lat[1]
-  LON<-test$lon[1]
+  LAT<-choice$lat[1]
+  LON<-choice$lon[1]
   location.st<-cf_find_station(lat = LAT, long = LON, rad = 10,search = "latlong")
   location.df <- location.st %>% 
     map_df(`[`)
@@ -237,7 +237,7 @@ DPLOTT<- function(startDay,endDay,numberYear,station)
     geom_area(aes(x=MonthDay, y=MEANBYDAY.x),fill="purple",show.legend = FALSE,alpha=0.4)
 }
 
-DPLOTT(startDay =  "2005-03-01 00", endDay =  "2008-08-01 00", numberYear =   10, station = "Auckland")
+DPLOTT(startDay =  "2005-03-01 00", endDay =  "2008-08-01 00", numberYear =   10, station = "Napier")
 
 
 #Testing area
